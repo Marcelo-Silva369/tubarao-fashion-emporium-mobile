@@ -1,19 +1,35 @@
 
 import { useState } from 'react';
-import { ShoppingCart, Search, Menu, Heart, User } from 'lucide-react';
+import { ShoppingCart, Search, Menu, Heart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { User as UserType } from '@supabase/supabase-js';
 
 interface HeaderProps {
   cartItemsCount: number;
   onCartClick: () => void;
   onSearch: (query: string) => void;
   searchQuery: string;
+  user?: UserType | null;
+  onAuthClick: () => void;
 }
 
-const Header = ({ cartItemsCount, onCartClick, onSearch, searchQuery }: HeaderProps) => {
+const Header = ({ cartItemsCount, onCartClick, onSearch, searchQuery, user, onAuthClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast.error('Erro ao sair');
+    } else {
+      toast.success('Logout realizado com sucesso!');
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b">
@@ -41,10 +57,27 @@ const Header = ({ cartItemsCount, onCartClick, onSearch, searchQuery }: HeaderPr
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Button variant="ghost" className="text-gray-700 hover:text-blue-900">
-              <User className="h-4 w-4 mr-2" />
-              Conta
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="text-gray-700 hover:text-blue-900">
+                    <User className="h-4 w-4 mr-2" />
+                    Olá, {user.user_metadata?.full_name || 'Usuário'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="ghost" className="text-gray-700 hover:text-blue-900" onClick={onAuthClick}>
+                <User className="h-4 w-4 mr-2" />
+                Entrar
+              </Button>
+            )}
             <Button variant="ghost" className="text-gray-700 hover:text-blue-900">
               <Heart className="h-4 w-4 mr-2" />
               Favoritos
@@ -104,10 +137,22 @@ const Header = ({ cartItemsCount, onCartClick, onSearch, searchQuery }: HeaderPr
         {isMobileMenuOpen && (
           <div className="md:hidden border-t bg-white py-4 animate-fade-in">
             <nav className="flex flex-col space-y-2">
-              <Button variant="ghost" className="justify-start text-gray-700 hover:text-blue-900">
-                <User className="h-4 w-4 mr-2" />
-                Minha Conta
-              </Button>
+              {user ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-gray-600">
+                    Olá, {user.user_metadata?.full_name || 'Usuário'}
+                  </div>
+                  <Button variant="ghost" className="justify-start text-gray-700 hover:text-blue-900" onClick={handleSignOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sair
+                  </Button>
+                </>
+              ) : (
+                <Button variant="ghost" className="justify-start text-gray-700 hover:text-blue-900" onClick={onAuthClick}>
+                  <User className="h-4 w-4 mr-2" />
+                  Entrar
+                </Button>
+              )}
               <Button variant="ghost" className="justify-start text-gray-700 hover:text-blue-900">
                 <Heart className="h-4 w-4 mr-2" />
                 Favoritos

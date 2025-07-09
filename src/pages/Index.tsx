@@ -10,12 +10,22 @@ import CategoryCard from '@/components/CategoryCard';
 import Header from '@/components/Header';
 import CartSidebar from '@/components/CartSidebar';
 import ProductModal from '@/components/ProductModal';
-import { products, categories } from '@/data/mockData';
+import AuthModal from '@/components/AuthModal';
+import { categories } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useProducts } from '@/hooks/useProducts';
+import { useFavorites } from '@/hooks/useFavorites';
+import { toast } from 'sonner';
 
 const Index = () => {
+  const { user, session } = useAuth();
+  const { products, loading: productsLoading } = useProducts();
+  const { favorites, toggleFavorite } = useFavorites(user?.id);
+  
   const [cartItems, setCartItems] = useState([]);
-  const [favorites, setFavorites] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -41,6 +51,7 @@ const Index = () => {
       }
       return [...prev, { ...product, size, quantity }];
     });
+    toast.success('Produto adicionado ao carrinho!');
   };
 
   const removeFromCart = (productId, size) => {
@@ -61,12 +72,13 @@ const Index = () => {
     );
   };
 
-  const toggleFavorite = (productId) => {
-    setFavorites(prev =>
-      prev.includes(productId)
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+  const handleFavoriteToggle = async (productId) => {
+    if (!user) {
+      toast.error('Faça login para adicionar aos favoritos');
+      setIsAuthOpen(true);
+      return;
+    }
+    await toggleFavorite(productId);
   };
 
   const cartTotal = cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
@@ -79,6 +91,8 @@ const Index = () => {
         onCartClick={() => setIsCartOpen(true)}
         onSearch={setSearchQuery}
         searchQuery={searchQuery}
+        user={user}
+        onAuthClick={() => setIsAuthOpen(true)}
       />
 
       {/* Hero Section */}
@@ -149,19 +163,31 @@ const Index = () => {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Produtos em Destaque</h2>
             <p className="text-xl text-gray-600">Os mais vendidos da temporada</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProducts.map((product, index) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                index={index}
-                isFavorite={favorites.includes(product.id)}
-                onFavoriteToggle={() => toggleFavorite(product.id)}
-                onAddToCart={(size) => addToCart(product, size)}
-                onProductClick={() => setSelectedProduct(product)}
-              />
-            ))}
-          </div>
+          {productsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="bg-gray-200 h-64 rounded-lg mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {featuredProducts.map((product, index) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                  isFavorite={favorites.includes(product.id)}
+                  onFavoriteToggle={() => handleFavoriteToggle(product.id)}
+                  onAddToCart={(size) => addToCart(product, size)}
+                  onProductClick={() => setSelectedProduct(product)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -200,14 +226,14 @@ const Index = () => {
                 product={product}
                 index={index}
                 isFavorite={favorites.includes(product.id)}
-                onFavoriteToggle={() => toggleFavorite(product.id)}
+                onFavoriteToggle={() => handleFavoriteToggle(product.id)}
                 onAddToCart={(size) => addToCart(product, size)}
                 onProductClick={() => setSelectedProduct(product)}
               />
             ))}
           </div>
           
-          {filteredProducts.length === 0 && (
+          {filteredProducts.length === 0 && !productsLoading && (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-semibold text-gray-900 mb-2">Nenhum produto encontrado</h3>
@@ -286,6 +312,7 @@ const Index = () => {
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         total={cartTotal}
+        user={user}
       />
 
       {/* Product Modal */}
@@ -296,9 +323,15 @@ const Index = () => {
           onClose={() => setSelectedProduct(null)}
           onAddToCart={addToCart}
           isFavorite={favorites.includes(selectedProduct.id)}
-          onFavoriteToggle={() => toggleFavorite(selectedProduct.id)}
+          onFavoriteToggle={() => handleFavoriteToggle(selectedProduct.id)}
         />
       )}
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthOpen}
+        onClose={() => setIsAuthOpen(false)}
+      />
     </div>
   );
 };
