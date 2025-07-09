@@ -8,7 +8,7 @@ interface CartItem {
   id: number;
   name: string;
   price: number;
-  image: string;
+  image_url?: string;
   size: string;
   quantity: number;
 }
@@ -67,7 +67,7 @@ const CartSidebar = ({
                 {cartItems.map((item) => (
                   <div key={`${item.id}-${item.size}`} className="flex gap-4 p-4 border rounded-lg">
                     <img
-                      src={item.image}
+                      src={item.image_url || '/placeholder.svg'}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded"
                     />
@@ -80,7 +80,7 @@ const CartSidebar = ({
                           Tam: {item.size}
                         </Badge>
                         <span className="text-sm font-semibold text-blue-900">
-                          R$ {item.price.toFixed(2)}
+                          R$ {Number(item.price).toFixed(2)}
                         </span>
                       </div>
                       
@@ -129,7 +129,7 @@ const CartSidebar = ({
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold text-gray-900">Total:</span>
                   <span className="text-xl font-bold text-blue-900">
-                    R$ {total.toFixed(2)}
+                    R$ {Number(total).toFixed(2)}
                   </span>
                 </div>
                 

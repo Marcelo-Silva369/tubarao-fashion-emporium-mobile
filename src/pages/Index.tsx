@@ -17,6 +17,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProducts } from '@/hooks/useProducts';
 import { useFavorites } from '@/hooks/useFavorites';
 import { toast } from 'sonner';
+import { Tables } from '@/integrations/supabase/types';
+
+type Product = Tables<'products'>;
 
 const Index = () => {
   const { user, session } = useAuth();
@@ -26,7 +29,7 @@ const Index = () => {
   const [cartItems, setCartItems] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
@@ -39,7 +42,7 @@ const Index = () => {
 
   const featuredProducts = products.filter(product => product.featured).slice(0, 6);
 
-  const addToCart = (product, size = 'M', quantity = 1) => {
+  const addToCart = (product: Product, size = 'M', quantity = 1) => {
     setCartItems(prev => {
       const existing = prev.find(item => item.id === product.id && item.size === size);
       if (existing) {
@@ -49,7 +52,14 @@ const Index = () => {
             : item
         );
       }
-      return [...prev, { ...product, size, quantity }];
+      return [...prev, { 
+        id: product.id, 
+        name: product.name, 
+        price: Number(product.price), 
+        image_url: product.image_url,
+        size, 
+        quantity 
+      }];
     });
     toast.success('Produto adicionado ao carrinho!');
   };
@@ -312,7 +322,6 @@ const Index = () => {
         onUpdateQuantity={updateCartQuantity}
         onRemoveItem={removeFromCart}
         total={cartTotal}
-        user={user}
       />
 
       {/* Product Modal */}

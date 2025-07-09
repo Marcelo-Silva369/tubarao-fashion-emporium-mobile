@@ -4,20 +4,9 @@ import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  category: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  featured?: boolean;
-  discount?: number;
-  sizes: string[];
-}
+type Product = Tables<'products'>;
 
 interface ProductCardProps {
   product: Product;
@@ -36,7 +25,7 @@ const ProductCard = ({
   onAddToCart,
   onProductClick 
 }: ProductCardProps) => {
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
+  const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || 'M');
 
   return (
     <Card 
@@ -45,7 +34,7 @@ const ProductCard = ({
     >
       <div className="relative overflow-hidden" onClick={onProductClick}>
         <img
-          src={product.image}
+          src={product.image_url}
           alt={product.name}
           className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
         />
@@ -60,7 +49,7 @@ const ProductCard = ({
               ⭐ Destaque
             </Badge>
           )}
-          {product.discount && (
+          {product.discount && product.discount > 0 && (
             <Badge className="bg-red-500 hover:bg-red-600 text-white">
               -{product.discount}%
             </Badge>
@@ -111,24 +100,24 @@ const ProductCard = ({
                 <Star
                   key={i}
                   className={`h-3 w-3 ${
-                    i < Math.floor(product.rating)
+                    i < Math.floor(product.rating || 0)
                       ? 'text-yellow-400 fill-current'
                       : 'text-gray-300'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-sm text-gray-600">({product.reviews})</span>
+            <span className="text-sm text-gray-600">({product.reviews_count || 0})</span>
           </div>
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <span className="text-lg font-bold text-blue-900">
-                R$ {product.price.toFixed(2)}
+                R$ {Number(product.price).toFixed(2)}
               </span>
-              {product.originalPrice && (
+              {product.original_price && (
                 <span className="text-sm text-gray-500 line-through">
-                  R$ {product.originalPrice.toFixed(2)}
+                  R$ {Number(product.original_price).toFixed(2)}
                 </span>
               )}
             </div>
@@ -139,7 +128,7 @@ const ProductCard = ({
 
           {/* Size Selection */}
           <div className="flex gap-1 pt-1">
-            {product.sizes.slice(0, 4).map((size) => (
+            {product.sizes?.slice(0, 4).map((size) => (
               <Button
                 key={size}
                 variant={selectedSize === size ? "default" : "outline"}
