@@ -37,8 +37,15 @@ const Header = ({ cartItemsCount, onCartClick, onSearch, searchQuery, user, onAu
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-2">
-            <div className="text-2xl font-bold text-blue-900">
-              🦈 <span className="hidden sm:inline">Tubarão Fashion</span>
+            <div className="flex items-center space-x-2">
+              <img 
+                src="images/logo-tubarao-loja.png" 
+                alt="Tubarão Fashion Logo" 
+                className="h-12 w-auto object-contain"
+              />
+              <span className="text-2xl font-bold text-blue-900 hidden sm:inline">
+                Tubarão Fashion
+              </span>
             </div>
           </div>
 

@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
-interface CartItem {
-  id: number;
+export interface CartItem {
+  id: string;
   name: string;
   price: number;
   image_url?: string;
@@ -17,8 +17,8 @@ interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   cartItems: CartItem[];
-  onUpdateQuantity: (productId: number, size: string, quantity: number) => void;
-  onRemoveItem: (productId: number, size: string) => void;
+  onUpdateQuantity: (productId: string, size: string, quantity: number) => void;
+  onRemoveItem: (productId: string, size: string) => void;
   total: number;
 }
 

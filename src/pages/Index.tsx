@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { ShoppingCart, Heart, Search, Menu, Star, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import ProductCard from '@/components/ProductCard';
 import CategoryCard from '@/components/CategoryCard';
 import Header from '@/components/Header';
-import CartSidebar from '@/components/CartSidebar';
+import CartSidebar, { CartItem } from '@/components/CartSidebar';
 import ProductModal from '@/components/ProductModal';
 import AuthModal from '@/components/AuthModal';
 import { categories } from '@/data/mockData';
@@ -26,7 +25,7 @@ const Index = () => {
   const { products, loading: productsLoading } = useProducts();
   const { favorites, toggleFavorite } = useFavorites(user?.id);
   
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -64,11 +63,11 @@ const Index = () => {
     toast.success('Produto adicionado ao carrinho!');
   };
 
-  const removeFromCart = (productId, size) => {
+  const removeFromCart = (productId: string, size: string) => {
     setCartItems(prev => prev.filter(item => !(item.id === productId && item.size === size)));
   };
 
-  const updateCartQuantity = (productId, size, quantity) => {
+  const updateCartQuantity = (productId: string, size: string, quantity: number) => {
     if (quantity === 0) {
       removeFromCart(productId, size);
       return;
@@ -82,7 +81,7 @@ const Index = () => {
     );
   };
 
-  const handleFavoriteToggle = async (productId) => {
+  const handleFavoriteToggle = async (productId: string) => {
     if (!user) {
       toast.error('Faça login para adicionar aos favoritos');
       setIsAuthOpen(true);
@@ -106,35 +105,74 @@ const Index = () => {
       />
 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-blue-900 via-blue-800 to-cyan-700 text-white py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative max-w-7xl mx-auto text-center z-10">
-          <div className="animate-fade-in">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
-              🦈 Tubarão Fashion
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-cyan-100 max-w-2xl mx-auto">
-              Mergulhe no estilo. Descubra as últimas tendências da moda com a força de um tubarão!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-white text-blue-900 hover:bg-cyan-50 font-semibold text-lg px-8 py-4 hover-scale"
-                onClick={() => document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Explorar Coleção
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="border-white text-white hover:bg-white hover:text-blue-900 font-semibold text-lg px-8 py-4 hover-scale"
-                onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Ver Categorias
-              </Button>
+      <section className="relative h-[600px] md:h-[700px] overflow-hidden">
+        {/* Vídeo de fundo */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/videos/banner-loja-vendas.mp4" type="video/mp4" />
+          Seu navegador não suporta vídeos HTML5.
+        </video>
+        <div className="absolute inset-0 bg-black/60"></div>
+        
+        {/* Conteúdo principal */}
+        <div className="relative h-full flex flex-col">
+          {/* Conteúdo centralizado - Ajustado para subir mais */}
+          <div className="flex-1 flex items-start pt-12 sm:pt-16 md:pt-20 justify-center">
+            <div className="max-w-7xl w-full mx-auto px-4 text-center mt-6 sm:mt-8 md:mt-10">
+              <div className="animate-fade-in">
+                <div className="flex flex-col items-center mb-8">
+                  <div className="w-32 h-32 md:w-36 md:h-36 mb-4 flex items-center justify-center">
+                    <img 
+                      src="images/logo-tubarao.png" 
+                      alt="Tubarão Fashion Logo" 
+                      className="h-full w-auto object-contain drop-shadow-lg"
+                    />
+                  </div>
+                  <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-white to-cyan-200 bg-clip-text text-transparent">
+                    Tubarão Fashion
+                  </h1>
+                </div>
+                <p className="text-xl md:text-2xl mb-8 text-cyan-100 max-w-2xl mx-auto">
+                  Mergulhe no estilo. Descubra as últimas tendências da moda com a força de um tubarão!
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-blue-900 hover:bg-cyan-50 font-semibold text-lg px-8 py-4 hover-scale"
+                    onClick={() => document.getElementById('featured')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    Explorar Coleção
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    className="bg-white text-blue-900 hover:bg-cyan-50 font-semibold text-lg px-8 py-4 hover-scale"
+                    onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
+                  >
+                    Ver Categorias
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Seta de rolagem - Ajustada para baixar */}
+          <div className="absolute bottom-4 sm:bottom-6 left-0 right-0 z-10">
+            <div className="flex justify-center">
+              <div className="animate-bounce">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
+        
+        {/* Elementos decorativos */}
         <div className="absolute -bottom-20 -right-20 opacity-10">
           <div className="text-9xl">🦈</div>
         </div>

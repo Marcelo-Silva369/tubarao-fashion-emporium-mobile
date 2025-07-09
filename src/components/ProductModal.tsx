@@ -4,21 +4,13 @@ import { X, Heart, ShoppingCart, Star, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tables } from '@/integrations/supabase/types';
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  category: string;
-  image: string;
-  rating: number;
-  reviews: number;
-  description?: string;
+type Product = Tables<'products'> & {
   sizes: string[];
   colors?: string[];
   features?: string[];
-}
+};
 
 interface ProductModalProps {
   product: Product;
@@ -37,8 +29,14 @@ const ProductModal = ({
   isFavorite, 
   onFavoriteToggle 
 }: ProductModalProps) => {
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
+  const [selectedSize, setSelectedSize] = useState('M');
   const [quantity, setQuantity] = useState(1);
+  
+  // Garantir que o produto tenha um array de tamanhos
+  const productSizes = product.sizes || ['M'];
+  const productImage = product.image_url || '';
+  const productRating = 4.5; // Valor padrão para rating
+  const productReviews = 0; // Valor padrão para reviews
 
   if (!isOpen) return null;
 
@@ -69,7 +67,7 @@ const ProductModal = ({
               {/* Image */}
               <div className="relative bg-gray-50">
                 <img
-                  src={product.image}
+                  src={productImage}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -100,23 +98,25 @@ const ProductModal = ({
                         <Star
                           key={i}
                           className={`h-4 w-4 ${
-                            i < Math.floor(product.rating)
+                            i < Math.floor(productRating)
                               ? 'text-yellow-400 fill-current'
                               : 'text-gray-300'
                           }`}
                         />
                       ))}
                     </div>
-                    <span className="text-gray-600">({product.reviews} avaliações)</span>
+                    <span className="ml-2 text-sm text-gray-600">
+                      {productRating} ({productReviews} avaliações)
+                    </span>
                   </div>
 
                   <div className="flex items-center space-x-3 mb-6">
                     <span className="text-3xl font-bold text-blue-900">
-                      R$ {product.price.toFixed(2)}
+                      R$ {Number(product.price).toFixed(2)}
                     </span>
-                    {product.originalPrice && (
+                    {product.original_price && (
                       <span className="text-xl text-gray-500 line-through">
-                        R$ {product.originalPrice.toFixed(2)}
+                        R$ {Number(product.original_price).toFixed(2)}
                       </span>
                     )}
                   </div>
@@ -132,13 +132,14 @@ const ProductModal = ({
                 {/* Size Selection */}
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3">Tamanho</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size) => (
+                  <div className="flex items-center gap-2">
+                    {productSizes.map((size) => (
                       <Button
                         key={size}
-                        variant={selectedSize === size ? "default" : "outline"}
+                        variant={selectedSize === size ? 'default' : 'outline'}
+                        size="sm"
                         onClick={() => setSelectedSize(size)}
-                        className="min-w-12"
+                        className="h-10 w-10 p-0"
                       >
                         {size}
                       </Button>
@@ -196,7 +197,7 @@ const ProductModal = ({
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg py-6"
                   >
                     <ShoppingCart className="h-5 w-5 mr-2" />
-                    Adicionar ao Carrinho - R$ {(product.price * quantity).toFixed(2)}
+                    Adicionar ao Carrinho - R$ {(Number(product.price) * quantity).toFixed(2)}
                   </Button>
                   
                   <div className="text-center text-sm text-gray-600">
