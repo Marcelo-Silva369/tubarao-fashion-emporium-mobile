@@ -108,10 +108,11 @@ export type Database = {
           shipping_address?: Json | null
           status?: string | null
           total?: number
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
+
       products: {
         Row: {
           category: string

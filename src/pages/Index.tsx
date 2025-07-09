@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ShoppingCart, Heart, Search, Menu, Star, Filter } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ShoppingCart, Heart, Search, Menu, Star, Filter, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import Header from '@/components/Header';
 import CartSidebar, { CartItem } from '@/components/CartSidebar';
 import ProductModal from '@/components/ProductModal';
 import AuthModal from '@/components/AuthModal';
+
 import { categories } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,13 +25,35 @@ const Index = () => {
   const { user, session } = useAuth();
   const { products, loading: productsLoading } = useProducts();
   const { favorites, toggleFavorite } = useFavorites(user?.id);
+  const productsSectionRef = useRef<HTMLDivElement>(null);
   
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Carrega o carrinho do localStorage ao inicializar
+const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+  if (typeof window !== 'undefined') {
+    const savedCart = localStorage.getItem('cartItems');
+    return savedCart ? JSON.parse(savedCart) : [];
+  }
+  return [];
+});
+
+// Atualiza o localStorage sempre que o carrinho mudar
+useEffect(() => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  }
+}, [cartItems]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+    // Rola até a seção de produtos
+    productsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -195,8 +218,17 @@ const Index = () => {
                 category={category}
                 index={index}
                 onClick={() => {
-                  setSelectedCategory(category.slug);
-                  document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' });
+                  const handleCategoryClick = (category: string) => {
+                    setSelectedCategory(category);
+                    // Rola até a seção de produtos
+                    setTimeout(() => {
+                      window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                      });
+                    }, 100);
+                  };
+                  handleCategoryClick(category.slug);
                 }}
               />
             ))}
@@ -240,7 +272,7 @@ const Index = () => {
       </section>
 
       {/* All Products */}
-      <section id="products" className="py-16 px-4">
+      <section id="products" ref={productsSectionRef} className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8">
             <h2 className="text-4xl font-bold text-gray-900 mb-4 md:mb-0">
@@ -309,11 +341,27 @@ const Index = () => {
       </section>
 
       {/* Footer */}
+      {/* Botão flutuante de suporte */}
+      <button
+        onClick={() => {}}
+        className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg z-50 flex items-center justify-center"
+        aria-label="Abrir chat de suporte"
+      >
+        <MessageCircle className="h-6 w-6" />
+      </button>
+
       <footer className="bg-gray-900 text-white py-12 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold mb-4 text-cyan-400">🦈 Tubarão Fashion</h3>
+              <div className="flex items-center mb-4">
+                <img 
+                  src="images/logo-tubarao.png" 
+                  alt="Tubarão Fashion" 
+                  className="h-10 w-auto mr-2"
+                />
+                <h3 className="text-2xl font-bold text-cyan-400">Tubarão Fashion</h3>
+              </div>
               <p className="text-gray-400">
                 Sua loja de moda online com as melhores tendências e qualidade incomparável.
               </p>
@@ -321,19 +369,79 @@ const Index = () => {
             <div>
               <h4 className="font-semibold mb-4">Categorias</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Masculino</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Feminino</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Infantil</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Acessórios</a></li>
+                <li>
+                  <button 
+                    onClick={() => handleCategoryClick('masculino')}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Masculino
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => handleCategoryClick('feminino')}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Feminino
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => handleCategoryClick('infantil')}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Infantil
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => handleCategoryClick('acessorios')}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Acessórios
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Atendimento</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Central de Ajuda</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Trocas e Devoluções</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Entregas</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
+                <li>
+                  <button 
+                    onClick={() => {}}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Central de Ajuda
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {
+                      window.open('/trocas-e-devolucoes', '_blank');
+                    }}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Trocas e Devoluções
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {
+                      window.open('/entregas', '_blank');
+                    }}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Entregas
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    onClick={() => {}}
+                    className="hover:text-white transition-colors text-left w-full"
+                  >
+                    Contato
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
@@ -361,6 +469,7 @@ const Index = () => {
         onRemoveItem={removeFromCart}
         total={cartTotal}
       />
+
 
       {/* Product Modal */}
       {selectedProduct && (
